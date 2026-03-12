@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotForge – Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080b10; --surface:#0f1318; --surface2:#151b22; --border:#1e2730;
+  --accent:#00e5ff; --gold:#f59e0b; --text:#e8edf2; --muted:#5a6a7a;
+  --success:#22c55e; --danger:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
+.logo span{color:var(--accent);}
+.topbar-center{display:flex;align-items:center;gap:8px;}
+.agent-pill{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:0.82rem;font-weight:500;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+.btn{padding:7px 16px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all 0.2s;}
+.btn-accent{background:var(--accent);color:var(--bg);}
+.btn-accent:hover{opacity:0.85;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);}
+.btn-success{background:var(--success);color:white;}
+.btn-back{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px 8px;}
+.btn-back:hover{color:var(--text);}
+
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:260px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);}
+.s-section{padding:14px 16px;border-bottom:1px solid var(--border);}
+.s-label{font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-family:'Syne',sans-serif;}
+.field{margin-bottom:10px;}
+.field label{display:block;font-size:0.74rem;color:var(--muted);margin-bottom:5px;}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;resize:none;}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);}
+.field textarea{min-height:110px;}
+.color-row{display:flex;gap:7px;flex-wrap:wrap;}
+.cswatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.2s;}
+.cswatch:hover{transform:scale(1.15);}
+.cswatch.sel{border-color:white;}
+.tone-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.tpill{padding:4px 10px;border-radius:6px;font-size:0.72rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.tpill.active{background:rgba(0,229,255,0.1);color:var(--accent);border-color:rgba(0,229,255,0.3);}
+
+/* CHANNELS IN SIDEBAR */
+.ch-toggle{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.ch-toggle:last-child{border-bottom:none;}
+.ch-name{font-size:0.8rem;display:flex;align-items:center;gap:7px;}
+.toggle{width:34px;height:18px;background:var(--border);border-radius:100px;cursor:pointer;position:relative;transition:background 0.2s;}
+.toggle.on{background:var(--accent);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:white;border-radius:50%;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(16px);}
+
+/* CENTER */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative;}
+.center::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;}
+.preview-bar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);z-index:1;flex-shrink:0;}
+.pbar-label{font-family:'Syne',sans-serif;font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;}
+.pbar-status{display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--success);}
+.sdot{width:6px;height:6px;background:var(--success);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.chat-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:1;overflow:hidden;}
+.chat-win{width:100%;max-width:400px;height:100%;max-height:540px;background:var(--surface);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.5);}
+.chat-head{padding:13px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.chat-av{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.chat-aname{font-family:'Syne',sans-serif;font-weight:700;font-size:0.86rem;}
+.chat-astatus{font-size:0.68rem;color:var(--success);}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);}
+.msg{display:flex;gap:7px;animation:msgIn 0.25s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.msg.user{flex-direction:row-reverse;}
+.mbubble{max-width:80%;padding:9px 12px;border-radius:13px;font-size:0.82rem;line-height:1.5;}
+.msg.bot .mbubble{background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:3px;}
+.msg.user .mbubble{border-bottom-right-radius:3px;color:white;}
+.typing{display:flex;gap:4px;align-items:center;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:13px;border-bottom-left-radius:3px;width:fit-content;}
+.tdot{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:tb 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:0.2s;}
+.tdot:nth-child(3){animation-delay:0.4s;}
+@keyframes tb{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-4px);}}
+.chat-inp{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.cinput{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 11px;color:var(--text);font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;}
+.cinput:focus{border-color:var(--accent);}
+.csend{width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;font-size:0.9rem;transition:all 0.2s;flex-shrink:0;}
+.csend:hover{transform:scale(1.05);}
+
+/* RIGHT PANEL */
+.rpanel{width:220px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.rpanel::-webkit-scrollbar{width:3px;}
+.rpanel::-webkit-scrollbar-thumb{background:var(--border);}
+.rp-section{padding:13px 15px;border-bottom:1px solid var(--border);}
+.rp-label{font-size:0.63rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;font-family:'Syne',sans-serif;}
+.stat-row-sm{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
+.stat-row-sm:last-child{border-bottom:none;}
+.srl{font-size:0.73rem;color:var(--muted);}
+.srv{font-size:0.75rem;font-weight:700;font-family:'Syne',sans-serif;}
+.action-btn{width:100%;padding:9px;border-radius:9px;font-size:0.78rem;font-weight:600;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all 0.2s;margin-bottom:7px;text-align:center;}
+.action-btn:last-child{margin-bottom:0;}
+.ab-wa{background:rgba(37,211,102,0.1);color:#25D366;border:1px solid rgba(37,211,102,0.2);}
+.ab-wa:hover{background:rgba(37,211,102,0.2);}
+.ab-tg{background:rgba(41,182,246,0.1);color:#29b6f6;border:1px solid rgba(41,182,246,0.2);}
+.ab-tg:hover{background:rgba(41,182,246,0.2);}
+.ab-copy{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.ab-copy:hover{color:var(--text);}
+.embed-box{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px;font-size:0.66rem;color:var(--accent);font-family:monospace;line-height:1.6;word-break:break-all;cursor:pointer;}
+.embed-box:hover{border-color:var(--accent);}
+.copy-hint{font-size:0.68rem;color:var(--muted);text-align:center;margin-top:5px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--success);color:white;padding:9px 20px;border-radius:100px;font-size:0.8rem;font-weight:700;font-family:'Syne',sans-serif;z-index:999;transition:transform 0.3s;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn-back" onclick="location.href='index.html'">← </button>
+    <div class="logo">Bot<span>Forge</span></div>
+  </div>
+  <div class="topbar-center">
+    <div class="agent-pill" id="agentPill">Loading...</div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-ghost" onclick="saveAgent()">Save</button>
+    <button class="btn btn-ghost" onclick="location.href='deploy.html?id='+agentId">Deploy →</button>
+    <button class="btn btn-accent" onclick="deployLive()">Go Live ✓</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="s-section">
+      <div class="s-label">Identity</div>
+      <div class="field">
+        <label>Agent Name</label>
+        <input type="text" id="sName" oninput="syncPreview()">
+      </div>
+      <div class="field">
+        <label>Greeting Message</label>
+        <input type="text" id="sGreeting" oninput="syncPreview()">
+      </div>
+      <div class="field">
+        <label>Bot Icon</label>
+        <div class="tone-pills" id="iconPills">
+          <span class="tpill active" onclick="pickIcon(this,'🤖')">🤖</span>
+          <span class="tpill" onclick="pickIcon(this,'💬')">💬</span>
+          <span class="tpill" onclick="pickIcon(this,'⭐')">⭐</span>
+          <span class="tpill" onclick="pickIcon(this,'🍽️')">🍽️</span>
+          <span class="tpill" onclick="pickIcon(this,'💇')">💇</span>
+          <span class="tpill" onclick="pickIcon(this,'🛍️')">🛍️</span>
+          <span class="tpill" onclick="pickIcon(this,'🏨')">🏨</span>
+          <span class="tpill" onclick="pickIcon(this,'🚚')">🚚</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-label">Instructions</div>
+      <div class="field">
+        <label>System Prompt</label>
+        <textarea id="sPrompt" style="min-height:140px;"></textarea>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-label">Tone</div>
+      <div class="tone-pills" id="tonePills">
+        <span class="tpill active" onclick="pickTone(this,'friendly')">Friendly</span>
+        <span class="tpill" onclick="pickTone(this,'professional')">Professional</span>
+        <span class="tpill" onclick="pickTone(this,'casual')">Casual</span>
+        <span class="tpill" onclick="pickTone(this,'formal')">Formal</span>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-label">Appearance</div>
+      <div class="field">
+        <label>Bot Color</label>
+        <div class="color-row">
+          <div class="cswatch sel" style="background:#00e5ff" data-c="#00e5ff" onclick="pickColor(this)"></div>
+          <div class="cswatch" style="background:#7c3aed" data-c="#7c3aed" onclick="pickColor(this)"></div>
+          <div class="cswatch" style="background:#f59e0b" data-c="#f59e0b" onclick="pickColor(this)"></div>
+          <div class="cswatch" style="background:#22c55e" data-c="#22c55e" onclick="pickColor(this)"></div>
+          <div class="cswatch" style="background:#ef4444" data-c="#ef4444" onclick="pickColor(this)"></div>
+          <div class="cswatch" style="background:#ec4899" data-c="#ec4899" onclick="pickColor(this)"></div>
+          <div class="cswatch" style="background:#f97316" data-c="#f97316" onclick="pickColor(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-section">
+      <div class="s-label">Active Channels</div>
+      <div id="channelToggles"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: CHAT PREVIEW -->
+  <div class="center">
+    <div class="preview-bar">
+      <div class="pbar-label">Live Preview</div>
+      <div class="pbar-status"><div class="sdot"></div>AI Connected</div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-win">
+        <div class="chat-head" id="chatHead">
+          <div class="chat-av" id="chatAv">🤖</div>
+          <div>
+            <div class="chat-aname" id="chatAname">Agent</div>
+            <div class="chat-astatus">● Online now</div>
+          </div>
+        </div>
+        <div class="chat-msgs" id="chatMsgs">
+          <div class="msg bot"><div class="mbubble" id="greetBubble">Hi! How can I help?</div></div>
+        </div>
+        <div class="chat-inp">
+          <input class="cinput" id="userIn" placeholder="Type a message..." onkeydown="if(event.key==='Enter')send()">
+          <button class="csend" id="sendBtn" onclick="send()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rpanel">
+    <div class="rp-section">
+      <div class="rp-label">Stats</div>
+      <div class="stat-row-sm"><span class="srl">Messages</span><span class="srv" id="rMsgs">0</span></div>
+      <div class="stat-row-sm"><span class="srl">Status</span><span class="srv" id="rStatus" style="color:var(--muted)">Draft</span></div>
+      <div class="stat-row-sm"><span class="srl">Channels</span><span class="srv" id="rChannels">-</span></div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Quick Actions</div>
+      <button class="action-btn ab-wa" onclick="exportWA()">📲 WhatsApp Export</button>
+      <button class="action-btn ab-tg" onclick="openTelegramGuide()">✈️ Telegram Setup</button>
+      <button class="action-btn ab-copy" onclick="copyHandover()">📄 Client Handover</button>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Website Embed</div>
+      <div class="embed-box" id="embedBox" onclick="copyEmbed()"></div>
+      <div class="copy-hint" id="copyHint">Click to copy</div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-label">Tips</div>
+      <div style="font-size:0.72rem;color:var(--muted);line-height:1.7;">
+        💡 Include real prices & hours in the prompt.<br><br>
+        💡 Test with actual customer questions.<br><br>
+        💡 Keep responses short — 1 to 3 sentences.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const agentId = params.get('id') || 'agent-001';
+
+function getAgents() { try { return JSON.parse(localStorage.getItem('bf_agents')||'[]'); } catch { return []; } }
+function saveAgents(arr) { localStorage.setItem('bf_agents', JSON.stringify(arr)); }
+
+let agent = null;
+let selColor = '#00e5ff';
+let selIcon = '🤖';
+let selTone = 'friendly';
+let totalMsgs = 0;
+
+function loadAgent() {
+  const agents = getAgents();
+  agent = agents.find(a => a.id === agentId);
+  if (!agent) { location.href = 'index.html'; return; }
+
+  document.getElementById('agentPill').textContent = agent.name;
+  document.getElementById('sName').value = agent.name;
+  document.getElementById('sGreeting').value = agent.greeting || '';
+  document.getElementById('sPrompt').value = agent.systemPrompt || '';
+  selColor = agent.color || '#00e5ff';
+  selIcon = agent.icon || '🤖';
+  selTone = agent.tone || 'friendly';
+  totalMsgs = agent.msgCount || 0;
+
+  // sync color
+  document.querySelectorAll('.cswatch').forEach(s => s.classList.toggle('sel', s.dataset.c === selColor));
+  // sync tone
+  document.querySelectorAll('#tonePills .tpill').forEach(p => p.classList.toggle('active', p.getAttribute('onclick')?.includes(selTone)));
+  // sync icon
+  document.querySelectorAll('#iconPills .tpill').forEach(p => p.classList.toggle('active', p.textContent === selIcon));
+
+  renderChannelToggles();
+  syncPreview();
+  updateStats();
+}
+
+function renderChannelToggles() {
+  const chs = [
+    {id:'website',label:'🌐 Website',color:'#00e5ff'},
+    {id:'telegram',label:'✈️ Telegram',color:'#29b6f6'},
+    {id:'whatsapp',label:'📱 WhatsApp',color:'#25D366'},
+    {id:'instagram',label:'📸 Instagram',color:'#e1306c'},
+    {id:'facebook',label:'👥 Facebook',color:'#4267B2'},
+  ];
+  const active = agent.channels || [];
+  document.getElementById('channelToggles').innerHTML = chs.map(c => `
+    <div class="ch-toggle">
+      <span class="ch-name" style="color:${active.includes(c.id)?c.color:'var(--muted)'}">${c.label}</span>
+      <div class="toggle ${active.includes(c.id)?'on':''}" onclick="toggleCh('${c.id}',this)"></div>
+    </div>
+  `).join('');
+}
+
+function toggleCh(id, el) {
+  el.classList.toggle('on');
+  const active = [...document.querySelectorAll('#channelToggles .toggle.on')].map((t,i) => {
+    const chs = ['website','telegram','whatsapp','instagram','facebook'];
+    return document.querySelectorAll('#channelToggles .toggle')[i] === t ? chs[i] : null;
+  }).filter(Boolean);
+  // rebuild from DOM
+  const allToggles = document.querySelectorAll('#channelToggles .toggle');
+  const chIds = ['website','telegram','whatsapp','instagram','facebook'];
+  agent.channels = [...allToggles].map((t,i) => t.classList.contains('on') ? chIds[i] : null).filter(Boolean);
+  renderChannelToggles();
+  updateStats();
+}
+
+function syncPreview() {
+  const name = document.getElementById('sName').value || 'Agent';
+  const greeting = document.getElementById('sGreeting').value || 'Hi! How can I help?';
+  document.getElementById('chatAname').textContent = name;
+  document.getElementById('greetBubble').textContent = greeting;
+  document.getElementById('chatAv').textContent = selIcon;
+  document.getElementById('chatAv').style.background = selColor + '22';
+  document.getElementById('sendBtn').style.background = selColor + '22';
+  document.getElementById('sendBtn').style.color = selColor;
+  document.getElementById('agentPill').textContent = name;
+
+  const ds = document.getElementById('dynStyle') || (() => {
+    const s = document.createElement('style'); s.id='dynStyle'; document.head.appendChild(s); return s;
+  })();
+  ds.textContent = `.msg.user .mbubble { background: ${selColor}; }`;
+
+  document.getElementById('embedBox').textContent = `<script src="https://botforge.vercel.app/widget.js"\n  data-agent="${agentId}"\n  data-color="${selColor}">\n<\/script>`;
+}
+
+function updateStats() {
+  if (!agent) return;
+  const chCount = (agent.channels||[]).length;
+  const el = document.getElementById('rStatus');
+  if (el) { el.textContent = agent.status==='live'?'Live':'Draft'; el.style.color = agent.status==='live'?'var(--success)':'var(--muted)'; }
+  const rc = document.getElementById('rChannels');
+  if (rc) rc.textContent = chCount + ' active';
+  const rm = document.getElementById('rMsgs');
+  if (rm) rm.textContent = totalMsgs;
+}
+
+function pickColor(el) {
+  document.querySelectorAll('.cswatch').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  selColor = el.dataset.c;
+  syncPreview();
+}
+
+function pickIcon(el, icon) {
+  document.querySelectorAll('#iconPills .tpill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selIcon = icon;
+  syncPreview();
+}
+
+function pickTone(el, tone) {
+  document.querySelectorAll('#tonePills .tpill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selTone = tone;
+}
+
+// SAVE
+function saveAgent() {
+  const agents = getAgents();
+  const idx = agents.findIndex(a => a.id === agentId);
+  if (idx === -1) return;
+  agents[idx] = {
+    ...agents[idx],
+    name: document.getElementById('sName').value || agents[idx].name,
+    greeting: document.getElementById('sGreeting').value,
+    systemPrompt: document.getElementById('sPrompt').value,
+    color: selColor, icon: selIcon, tone: selTone,
+    msgCount: totalMsgs
+  };
+  saveAgents(agents);
+  agent = agents[idx];
+  showToast('✓ Saved');
+}
+
+function deployLive() {
+  saveAgent();
+  const agents = getAgents();
+  const idx = agents.findIndex(a => a.id === agentId);
+  if (idx !== -1) { agents[idx].status = 'live'; saveAgents(agents); agent = agents[idx]; }
+  updateStats();
+  showToast('🚀 Agent is now Live!');
+}
+
+// CHAT
+async function send() {
+  const inp = document.getElementById('userIn');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+
+  const msgs = document.getElementById('chatMsgs');
+  msgs.appendChild(makeBubble('user', text));
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const typing = document.createElement('div');
+  typing.className = 'msg bot';
+  typing.innerHTML = '<div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>';
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  totalMsgs++;
+  updateStats();
+
+  // Build history
+  const history = [];
+  msgs.querySelectorAll('.msg').forEach(m => {
+    const b = m.querySelector('.mbubble');
+    if (!b) return;
+    history.push({ role: m.classList.contains('user') ? 'user' : 'assistant', content: b.textContent });
+  });
+  history.pop(); // remove typing
+
+  const prompt = document.getElementById('sPrompt').value || 'You are a helpful assistant. Be friendly and concise.';
+  const full = prompt + `\n\nTone: ${selTone}. Keep replies short — 1 to 3 sentences unless listing items.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system:full, messages:history })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't respond right now.";
+    msgs.removeChild(typing);
+    msgs.appendChild(makeBubble('bot', reply));
+  } catch {
+    msgs.removeChild(typing);
+    msgs.appendChild(makeBubble('bot', '⚠️ Connection error.'));
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function makeBubble(role, text) {
+  const d = document.createElement('div');
+  d.className = `msg ${role}`;
+  d.innerHTML = `<div class="mbubble">${text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>`;
+  return d;
+}
+
+// ACTIONS
+function copyEmbed() {
+  const code = document.getElementById('embedBox').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    document.getElementById('copyHint').textContent = '✓ Copied!';
+    setTimeout(() => document.getElementById('copyHint').textContent = 'Click to copy', 2000);
+  });
+}
+
+function exportWA() {
+  saveAgent();
+  const a = agent;
+  const text = `🤖 *AI CHATBOT READY — ${a.name.toUpperCase()}*\n━━━━━━━━━━━━━━━━━━━━\nBuilt by Stanley | AI Chatbot Services\nPort Harcourt, Nigeria\n━━━━━━━━━━━━━━━━━━━━\n\n✅ *Your chatbot is live!*\n\n📋 *Agent:* ${a.name}\n💬 *Greeting:* "${a.greeting}"\n⚡ *Channels:* ${(a.channels||[]).join(', ')}\n\n🔧 *What it does:*\n• Answers customers 24/7\n• Shares your prices & services\n• Collects leads automatically\n• Handles bookings\n\n📌 *Website embed code:*\n<script src="https://botforge.vercel.app/widget.js" data-agent="${a.id}"><\/script>\n\n━━━━━━━━━━━━━━━━━━━━\nUpdates? WhatsApp Stanley:\nwa.me/2349161036705\n━━━━━━━━━━━━━━━━━━━━`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+function openTelegramGuide() {
+  location.href = `deploy.html?id=${agentId}&tab=telegram`;
+}
+
+function copyHandover() {
+  saveAgent();
+  const a = agent;
+  const date = new Date().toLocaleDateString('en-NG', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const text = `CHATBOT HANDOVER — ${a.name}\nDelivered by Stanley | ${date}\n\n✓ Agent is ${a.status}\n✓ Channels: ${(a.channels||[]).join(', ')}\n✓ Greeting: "${a.greeting}"\n\nWebsite embed:\n<script src="https://botforge.vercel.app/widget.js" data-agent="${a.id}"><\/script>\n\nSupport: wa.me/2349161036705`;
+  navigator.clipboard.writeText(text).then(() => showToast('📄 Handover copied!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadAgent();
+</script>
+</body>
+</html>

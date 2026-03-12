@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotForge – Deploy</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080b10;--surface:#0f1318;--surface2:#151b22;--border:#1e2730;--accent:#00e5ff;--gold:#f59e0b;--text:#e8edf2;--muted:#5a6a7a;--success:#22c55e;--danger:#ef4444;--telegram:#29b6f6;--whatsapp:#25D366;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
+.logo span{color:var(--accent);}
+.btn{padding:7px 16px;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all 0.2s;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);}
+.btn-back{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px 8px;}
+.btn-back:hover{color:var(--text);}
+
+.page{max-width:860px;margin:0 auto;padding:32px 24px;}
+.page-header{margin-bottom:32px;}
+.page-header h1{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:6px;}
+.page-header p{color:var(--muted);font-size:0.88rem;}
+
+/* CHANNEL TABS */
+.ch-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+.ch-tab{padding:9px 18px;border-radius:10px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all 0.2s;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:7px;}
+.ch-tab:hover{color:var(--text);}
+.ch-tab.active{color:white;}
+.ch-tab.active.website{background:rgba(0,229,255,0.12);border-color:rgba(0,229,255,0.4);color:var(--accent);}
+.ch-tab.active.telegram{background:rgba(41,182,246,0.12);border-color:rgba(41,182,246,0.4);color:var(--telegram);}
+.ch-tab.active.whatsapp{background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.4);color:var(--whatsapp);}
+.ch-tab.active.instagram{background:rgba(225,48,108,0.12);border-color:rgba(225,48,108,0.4);color:#e1306c;}
+.ch-tab.active.facebook{background:rgba(66,103,178,0.12);border-color:rgba(66,103,178,0.4);color:#4267B2;}
+.coming-tag{font-size:0.6rem;background:rgba(90,106,122,0.2);color:var(--muted);padding:2px 6px;border-radius:100px;}
+
+/* DEPLOY PANEL */
+.deploy-panel{display:none;}
+.deploy-panel.active{display:block;}
+
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
+.step-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;}
+.step-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:0.75rem;flex-shrink:0;}
+.step-num.website{background:rgba(0,229,255,0.12);color:var(--accent);border:1px solid rgba(0,229,255,0.2);}
+.step-num.telegram{background:rgba(41,182,246,0.12);color:var(--telegram);border:1px solid rgba(41,182,246,0.2);}
+.step-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:4px;}
+.step-desc{font-size:0.82rem;color:var(--muted);line-height:1.6;}
+
+.code-block{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-family:monospace;font-size:0.8rem;color:var(--accent);line-height:1.8;position:relative;margin-top:12px;word-break:break-all;}
+.code-block .copy-btn{position:absolute;top:10px;right:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:0.68rem;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.code-block .copy-btn:hover{color:var(--text);}
+
+.info-box{background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:10px;padding:14px 16px;font-size:0.82rem;color:#88ccd6;line-height:1.6;margin-top:12px;}
+.warn-box{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px 16px;font-size:0.82rem;color:#d4a84b;line-height:1.6;margin-top:12px;}
+
+.action-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.act-btn{padding:9px 18px;border-radius:9px;font-size:0.8rem;font-weight:600;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.act-btn:hover{transform:translateY(-1px);}
+.ab-primary{background:var(--accent);color:var(--bg);}
+.ab-tg{background:var(--telegram);color:white;}
+.ab-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+
+.status-check{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:9px;font-size:0.82rem;margin-top:10px;}
+.sc-done{background:rgba(34,197,94,0.1);color:var(--success);}
+.sc-pending{background:rgba(90,106,122,0.1);color:var(--muted);}
+
+.coming-soon{background:var(--surface);border:2px dashed var(--border);border-radius:16px;padding:40px;text-align:center;}
+.coming-soon .icon{font-size:2.5rem;margin-bottom:12px;}
+.coming-soon h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:8px;}
+.coming-soon p{font-size:0.82rem;color:var(--muted);line-height:1.6;max-width:360px;margin:0 auto 16px;}
+.notify-btn{padding:9px 20px;border-radius:9px;background:rgba(90,106,122,0.15);border:1px solid var(--border);color:var(--muted);font-size:0.8rem;cursor:pointer;font-family:'Syne',sans-serif;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--success);color:white;padding:9px 20px;border-radius:100px;font-size:0.8rem;font-weight:700;font-family:'Syne',sans-serif;z-index:999;transition:transform 0.3s;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn-back" onclick="goBack()">←</button>
+    <div class="logo">Bot<span>Forge</span></div>
+  </div>
+  <div style="font-family:'Syne',sans-serif;font-size:0.82rem;color:var(--muted);" id="deployAgentName">Deploy Agent</div>
+  <button class="btn btn-ghost" onclick="location.href='index.html'">Dashboard</button>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Deploy Your Agent</h1>
+    <p>Follow the steps below to make your chatbot live on each platform</p>
+  </div>
+
+  <div class="ch-tabs">
+    <div class="ch-tab active website" onclick="switchTab('website',this)">🌐 Website</div>
+    <div class="ch-tab telegram" onclick="switchTab('telegram',this)">✈️ Telegram</div>
+    <div class="ch-tab whatsapp" onclick="switchTab('whatsapp',this)">📱 WhatsApp <span class="coming-tag">Soon</span></div>
+    <div class="ch-tab instagram" onclick="switchTab('instagram',this)">📸 Instagram <span class="coming-tag">Soon</span></div>
+    <div class="ch-tab facebook" onclick="switchTab('facebook',this)">👥 Facebook <span class="coming-tag">Soon</span></div>
+  </div>
+
+  <!-- WEBSITE -->
+  <div class="deploy-panel active" id="panel-website">
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num website">1</div>
+        <div>
+          <div class="step-title">Copy your embed code</div>
+          <div class="step-desc">This is the code that puts your chatbot on any website. One line of code, works on any site.</div>
+        </div>
+      </div>
+      <div class="code-block" id="embedCode">
+        <button class="copy-btn" onclick="copyCode('embedCode')">Copy</button>
+        Loading...
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num website">2</div>
+        <div>
+          <div class="step-title">Add it to the client's website</div>
+          <div class="step-desc">Paste the code just before the <code style="color:var(--accent)">&lt;/body&gt;</code> tag of their website. If the client uses WordPress, here's how:</div>
+        </div>
+      </div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyText('WordPress: Go to Appearance → Theme Editor → footer.php → paste the code before </body>')">Copy</button>
+        WordPress: Appearance → Theme Editor<br>
+        → footer.php → paste before &lt;/body&gt;
+      </div>
+      <div class="info-box">
+        💡 If the client's website was built by someone else, just send them the embed code via WhatsApp and tell them to paste it before &lt;/body&gt;. Any developer will understand this in seconds.
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num website">3</div>
+        <div>
+          <div class="step-title">Test it live</div>
+          <div class="step-desc">After adding the code, visit the client's website and look for the chat bubble in the bottom-right corner. Click it and send a test message.</div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="act-btn ab-primary" onclick="markDone('website')">✓ Mark Website as Done</button>
+      </div>
+      <div class="status-check sc-pending" id="website-status">○ Not yet deployed</div>
+    </div>
+  </div>
+
+  <!-- TELEGRAM -->
+  <div class="deploy-panel" id="panel-telegram">
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num telegram">1</div>
+        <div>
+          <div class="step-title">Create a Telegram Bot with BotFather</div>
+          <div class="step-desc">BotFather is Telegram's official bot for creating new bots. Open Telegram and search for <strong>@BotFather</strong>.</div>
+        </div>
+      </div>
+      <div class="action-row">
+        <a class="act-btn ab-tg" href="https://t.me/botfather" target="_blank">✈️ Open BotFather</a>
+      </div>
+      <div class="info-box">
+        In BotFather, type <strong>/newbot</strong> → give it a name (e.g. "Mama's Kitchen") → give it a username ending in "bot" (e.g. "mamaskitchenph_bot") → BotFather gives you a <strong>TOKEN</strong> — copy it, you need it in Step 3.
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num telegram">2</div>
+        <div>
+          <div class="step-title">Enter your Telegram Bot Token</div>
+          <div class="step-desc">Paste the token BotFather gave you here. It looks like: <code style="color:var(--telegram)">7412345678:AAFxxxx...</code></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <input type="text" id="tgToken" placeholder="Paste your bot token here..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none;">
+        <button class="act-btn ab-ghost" onclick="saveTgToken()">Save</button>
+      </div>
+      <div class="warn-box">⚠️ Keep this token private — never share it publicly. It gives full control of your bot.</div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num telegram">3</div>
+        <div>
+          <div class="step-title">Set up the webhook (connects your bot to AI)</div>
+          <div class="step-desc">This tells Telegram to send all messages from your bot to your BotForge server, which then replies using AI.</div>
+        </div>
+      </div>
+      <div class="code-block" id="webhookUrl">
+        <button class="copy-btn" onclick="copyCode('webhookUrl')">Copy</button>
+        Loading...
+      </div>
+      <div class="info-box">
+        Open this URL in your browser. If it shows <strong style="color:var(--success)">"ok":true</strong> — your Telegram bot is connected to AI! 🎉<br><br>
+        Then go to Telegram, find your bot, send <strong>/start</strong> and it should reply intelligently.
+      </div>
+      <div class="action-row">
+        <button class="act-btn ab-tg" onclick="openWebhook()">✈️ Set Webhook Now</button>
+        <button class="act-btn ab-ghost" onclick="markDone('telegram')">✓ Mark Telegram Done</button>
+      </div>
+      <div class="status-check sc-pending" id="telegram-status">○ Not yet connected</div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-header">
+        <div class="step-num telegram">4</div>
+        <div>
+          <div class="step-title">Share the bot link with your client</div>
+          <div class="step-desc">Your client's customers can now find and message the bot directly on Telegram.</div>
+        </div>
+      </div>
+      <div class="code-block" id="tgBotLink">
+        <button class="copy-btn" onclick="copyCode('tgBotLink')">Copy</button>
+        t.me/yourbotusername
+      </div>
+      <div class="info-box">
+        Replace "yourbotusername" with the actual username you set in BotFather. Share this link on the client's website, Instagram bio, WhatsApp status, everywhere.
+      </div>
+    </div>
+  </div>
+
+  <!-- WHATSAPP (coming soon) -->
+  <div class="deploy-panel" id="panel-whatsapp">
+    <div class="coming-soon">
+      <div class="icon">📱</div>
+      <h3>WhatsApp Integration — Coming Soon</h3>
+      <p>WhatsApp requires Meta Business API approval which takes 2–3 days. This feature is being built and will be ready in Stage 2 of BotForge.</p>
+      <p style="margin-top:8px;color:var(--muted);font-size:0.78rem;">For now, use Telegram as your messaging channel — it works the same way for Nigerian customers.</p>
+      <button class="notify-btn" onclick="showToast('You will be notified when WhatsApp is ready!')">Notify me when ready</button>
+    </div>
+  </div>
+
+  <!-- INSTAGRAM (coming soon) -->
+  <div class="deploy-panel" id="panel-instagram">
+    <div class="coming-soon">
+      <div class="icon">📸</div>
+      <h3>Instagram DM Integration — Coming Soon</h3>
+      <p>Instagram DM automation requires a Meta Business account and app review. This will be available in Stage 3 of BotForge.</p>
+      <button class="notify-btn" onclick="showToast('You will be notified when Instagram is ready!')">Notify me when ready</button>
+    </div>
+  </div>
+
+  <!-- FACEBOOK (coming soon) -->
+  <div class="deploy-panel" id="panel-facebook">
+    <div class="coming-soon">
+      <div class="icon">👥</div>
+      <h3>Facebook Messenger — Coming Soon</h3>
+      <p>Facebook Messenger integration uses the same Meta API as Instagram. Both will launch together in Stage 3.</p>
+      <button class="notify-btn" onclick="showToast('You will be notified when Facebook is ready!')">Notify me when ready</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const agentId = params.get('id') || 'agent-001';
+const initTab = params.get('tab') || 'website';
+
+function getAgents() { try { return JSON.parse(localStorage.getItem('bf_agents')||'[]'); } catch { return []; } }
+function saveAgents(arr) { localStorage.setItem('bf_agents', JSON.stringify(arr)); }
+
+let agent = null;
+
+function load() {
+  const agents = getAgents();
+  agent = agents.find(a => a.id === agentId);
+  if (!agent) { location.href = 'index.html'; return; }
+
+  document.getElementById('deployAgentName').textContent = agent.name;
+
+  // embed code
+  const embed = `<script src="https://botforge.vercel.app/widget.js"\n  data-agent="${agentId}"\n  data-color="${agent.color||'#00e5ff'}">\n<\/script>`;
+  const ec = document.getElementById('embedCode');
+  ec.childNodes[0] && (ec.childNodes[ec.childNodes.length-1].textContent = embed);
+  ec.insertAdjacentText('beforeend', embed);
+
+  // webhook URL
+  const wh = `https://api.telegram.org/bot{YOUR_TOKEN}/setWebhook?url=https://botforge.vercel.app/api/telegram?agent=${agentId}`;
+  const wu = document.getElementById('webhookUrl');
+  wu.insertAdjacentText('beforeend', wh);
+
+  // load saved token
+  const savedToken = localStorage.getItem(`bf_tg_${agentId}`);
+  if (savedToken) document.getElementById('tgToken').value = savedToken;
+
+  // load deploy status
+  const status = JSON.parse(localStorage.getItem(`bf_deploy_${agentId}`) || '{}');
+  if (status.website) {
+    document.getElementById('website-status').className = 'status-check sc-done';
+    document.getElementById('website-status').textContent = '✓ Website deployed';
+  }
+  if (status.telegram) {
+    document.getElementById('telegram-status').className = 'status-check sc-done';
+    document.getElementById('telegram-status').textContent = '✓ Telegram connected';
+  }
+
+  switchTab(initTab, document.querySelector(`.ch-tab.${initTab}`));
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.deploy-panel').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const panel = document.getElementById(`panel-${tab}`);
+  if (panel) panel.classList.add('active');
+}
+
+function saveTgToken() {
+  const token = document.getElementById('tgToken').value.trim();
+  if (!token) { showToast('⚠️ Enter a token first'); return; }
+  localStorage.setItem(`bf_tg_${agentId}`, token);
+
+  // update webhook URL
+  const wh = `https://api.telegram.org/bot${token}/setWebhook?url=https://botforge.vercel.app/api/telegram?agent=${agentId}`;
+  const wu = document.getElementById('webhookUrl');
+  // clear and rewrite
+  while (wu.childNodes.length > 1) wu.removeChild(wu.lastChild);
+  wu.insertAdjacentText('beforeend', wh);
+
+  showToast('✓ Token saved!');
+}
+
+function openWebhook() {
+  const token = document.getElementById('tgToken').value.trim();
+  if (!token) { showToast('⚠️ Enter your bot token in Step 2 first'); return; }
+  const url = `https://api.telegram.org/bot${token}/setWebhook?url=https://botforge.vercel.app/api/telegram?agent=${agentId}`;
+  window.open(url, '_blank');
+}
+
+function markDone(ch) {
+  const status = JSON.parse(localStorage.getItem(`bf_deploy_${agentId}`) || '{}');
+  status[ch] = true;
+  localStorage.setItem(`bf_deploy_${agentId}`, JSON.stringify(status));
+  const el = document.getElementById(`${ch}-status`);
+  el.className = 'status-check sc-done';
+  el.textContent = `✓ ${ch.charAt(0).toUpperCase()+ch.slice(1)} deployed`;
+  showToast(`🚀 ${ch} marked as deployed!`);
+}
+
+function copyCode(id) {
+  const el = document.getElementById(id);
+  const text = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+  navigator.clipboard.writeText(text).then(() => showToast('✓ Copied!'));
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('✓ Copied!'));
+}
+
+function goBack() {
+  history.length > 1 ? history.back() : location.href = `builder.html?id=${agentId}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+load();
+</script>
+</body>
+</html>

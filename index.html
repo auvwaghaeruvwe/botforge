@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotForge – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080b10;
+  --surface: #0f1318;
+  --surface2: #151b22;
+  --border: #1e2730;
+  --accent: #00e5ff;
+  --gold: #f59e0b;
+  --text: #e8edf2;
+  --muted: #5a6a7a;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --telegram: #29b6f6;
+  --whatsapp: #25D366;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; height:56px; background:var(--surface);
+  border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100;
+}
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.2rem; }
+.logo span { color:var(--accent); }
+.topbar-nav { display:flex; gap:6px; }
+.nav-link {
+  padding:6px 14px; border-radius:8px; font-size:0.82rem; font-weight:500;
+  cursor:pointer; border:none; background:transparent; color:var(--muted);
+  text-decoration:none; transition:all 0.2s; font-family:'DM Sans',sans-serif;
+}
+.nav-link:hover, .nav-link.active { background:var(--surface2); color:var(--text); }
+.btn {
+  padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700;
+  cursor:pointer; border:none; font-family:'Syne',sans-serif; transition:all 0.2s;
+}
+.btn-accent { background:var(--accent); color:var(--bg); }
+.btn-accent:hover { opacity:0.85; transform:translateY(-1px); }
+.btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); }
+
+.page { max-width:1100px; margin:0 auto; padding:32px 24px; }
+
+.page-header { margin-bottom:32px; }
+.page-header h1 { font-family:'Syne',sans-serif; font-weight:800; font-size:1.8rem; margin-bottom:6px; }
+.page-header p { color:var(--muted); font-size:0.9rem; }
+
+/* STATS ROW */
+.stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:32px; }
+.stat-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  padding:18px 20px;
+}
+.stat-card .label { font-size:0.72rem; color:var(--muted); font-weight:600; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; }
+.stat-card .value { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; }
+.stat-card .sub { font-size:0.72rem; color:var(--muted); margin-top:4px; }
+
+/* AGENTS GRID */
+.section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.section-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1rem; }
+
+.agents-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+
+.agent-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:16px;
+  padding:20px; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+}
+.agent-card:hover { border-color:rgba(0,229,255,0.3); transform:translateY(-2px); }
+.agent-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--card-color, var(--accent));
+}
+
+.agent-card-top { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.agent-icon {
+  width:44px; height:44px; border-radius:12px; display:flex;
+  align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;
+}
+.agent-card-name { font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem; margin-bottom:3px; }
+.agent-card-type { font-size:0.74rem; color:var(--muted); }
+
+.agent-channels { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.channel-tag {
+  padding:3px 9px; border-radius:100px; font-size:0.68rem; font-weight:600;
+  font-family:'Syne',sans-serif; display:flex; align-items:center; gap:4px;
+}
+.ch-website { background:rgba(0,229,255,0.1); color:var(--accent); }
+.ch-telegram { background:rgba(41,182,246,0.1); color:var(--telegram); }
+.ch-whatsapp { background:rgba(37,211,102,0.1); color:var(--whatsapp); }
+.ch-instagram { background:rgba(225,48,108,0.1); color:#e1306c; }
+.ch-facebook { background:rgba(66,103,178,0.1); color:#4267B2; }
+
+.agent-card-footer { display:flex; justify-content:space-between; align-items:center; }
+.status-badge {
+  padding:3px 9px; border-radius:100px; font-size:0.68rem; font-weight:700;
+  font-family:'Syne',sans-serif;
+}
+.status-live { background:rgba(34,197,94,0.15); color:var(--success); }
+.status-draft { background:rgba(90,106,122,0.2); color:var(--muted); }
+.agent-msgs { font-size:0.74rem; color:var(--muted); }
+
+.new-agent-card {
+  background:transparent; border:2px dashed var(--border); border-radius:16px;
+  padding:20px; cursor:pointer; transition:all 0.2s;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:160px; gap:10px;
+}
+.new-agent-card:hover { border-color:rgba(0,229,255,0.4); background:rgba(0,229,255,0.03); }
+.new-agent-card .plus { font-size:2rem; color:var(--muted); }
+.new-agent-card .label { font-size:0.85rem; color:var(--muted); }
+
+/* MODAL */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8);
+  z-index:500; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border:1px solid var(--border); border-radius:20px;
+  width:100%; max-width:500px; max-height:90vh; overflow-y:auto;
+}
+.modal-header {
+  padding:20px 24px; border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center; position:sticky; top:0;
+  background:var(--surface); z-index:1;
+}
+.modal-title { font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; }
+.modal-close { background:transparent; border:none; color:var(--muted); font-size:1.3rem; cursor:pointer; }
+.modal-body { padding:24px; display:flex; flex-direction:column; gap:16px; }
+.modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px; }
+
+.field label { display:block; font-size:0.74rem; color:var(--muted); margin-bottom:6px; font-weight:500; }
+.field input, .field textarea, .field select {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:9px 12px; color:var(--text); font-size:0.85rem;
+  font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s; resize:none;
+}
+.field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
+.field textarea { min-height:100px; }
+
+.channels-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.channel-option {
+  padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+  cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:8px;
+  font-size:0.82rem; background:var(--surface2);
+}
+.channel-option.selected { border-color:var(--accent); background:rgba(0,229,255,0.08); color:var(--accent); }
+.channel-option .ch-icon { font-size:1rem; }
+
+.color-row { display:flex; gap:8px; flex-wrap:wrap; }
+.color-swatch {
+  width:28px; height:28px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:all 0.2s;
+}
+.color-swatch:hover { transform:scale(1.15); }
+.color-swatch.sel { border-color:white; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px);
+  background:var(--success); color:white; padding:10px 22px; border-radius:100px;
+  font-size:0.82rem; font-weight:600; font-family:'Syne',sans-serif;
+  z-index:999; transition:transform 0.3s; pointer-events:none;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+@media(max-width:600px) {
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .agents-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Bot<span>Forge</span></div>
+  <nav class="topbar-nav">
+    <a class="nav-link active" href="index.html">Dashboard</a>
+    <a class="nav-link" href="builder.html">Builder</a>
+    <a class="nav-link" href="deploy.html">Deploy</a>
+  </nav>
+  <button class="btn btn-accent" onclick="openNewAgent()">+ New Agent</button>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <h1>Your Agents</h1>
+    <p>Build, manage and deploy AI chatbots for all your clients</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="label">Total Agents</div>
+      <div class="value" id="statAgents">1</div>
+      <div class="sub">across all clients</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Live Agents</div>
+      <div class="value" style="color:var(--success)" id="statLive">1</div>
+      <div class="sub">actively deployed</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Channels Active</div>
+      <div class="value" style="color:var(--accent)" id="statChannels">2</div>
+      <div class="sub">website + telegram</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Messages</div>
+      <div class="value" style="color:var(--gold)" id="statMsgs">0</div>
+      <div class="sub">total handled</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">All Agents</div>
+  </div>
+
+  <div class="agents-grid" id="agentsGrid"></div>
+</div>
+
+<!-- NEW AGENT MODAL -->
+<div class="modal-overlay" id="newAgentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create New Agent</div>
+      <button class="modal-close" onclick="closeNewAgent()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Agent / Business Name</label>
+        <input type="text" id="newName" placeholder="e.g. Cynthia's Salon Bot">
+      </div>
+      <div class="field">
+        <label>Business Type</label>
+        <select id="newType">
+          <option value="">Select type...</option>
+          <option value="restaurant">🍽️ Restaurant / Food</option>
+          <option value="salon">💇 Salon / Beauty</option>
+          <option value="shop">🛍️ Retail Shop</option>
+          <option value="hotel">🏨 Hotel / Lodging</option>
+          <option value="clinic">🏥 Clinic / Health</option>
+          <option value="logistics">🚚 Logistics / Delivery</option>
+          <option value="custom">✏️ Custom Business</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Deploy on these channels</label>
+        <div class="channels-grid" id="channelPicker">
+          <div class="channel-option selected" data-ch="website" onclick="toggleChannel(this)">
+            <span class="ch-icon">🌐</span> Website Widget
+          </div>
+          <div class="channel-option selected" data-ch="telegram" onclick="toggleChannel(this)">
+            <span class="ch-icon">✈️</span> Telegram
+          </div>
+          <div class="channel-option" data-ch="whatsapp" onclick="toggleChannel(this)">
+            <span class="ch-icon">📱</span> WhatsApp
+          </div>
+          <div class="channel-option" data-ch="instagram" onclick="toggleChannel(this)">
+            <span class="ch-icon">📸</span> Instagram DM
+          </div>
+          <div class="channel-option" data-ch="facebook" onclick="toggleChannel(this)">
+            <span class="ch-icon">👥</span> Facebook Messenger
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Bot Color</label>
+        <div class="color-row" id="colorPicker">
+          <div class="color-swatch sel" style="background:#00e5ff" data-c="#00e5ff" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#7c3aed" data-c="#7c3aed" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#f59e0b" data-c="#f59e0b" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#22c55e" data-c="#22c55e" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ef4444" data-c="#ef4444" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ec4899" data-c="#ec4899" onclick="pickColor(this)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeNewAgent()">Cancel</button>
+      <button class="btn btn-accent" style="flex:2" onclick="createAgent()">Create & Open Builder →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Load agents from localStorage
+function getAgents() {
+  try { return JSON.parse(localStorage.getItem('bf_agents') || '[]'); } catch { return []; }
+}
+function saveAgents(arr) {
+  localStorage.setItem('bf_agents', JSON.stringify(arr));
+}
+
+// Seed default agent if empty
+function seedDefault() {
+  let agents = getAgents();
+  if (agents.length === 0) {
+    agents = [{
+      id: 'agent-001',
+      name: "Mama's Kitchen Bot",
+      type: 'restaurant',
+      icon: '🍽️',
+      color: '#00e5ff',
+      status: 'live',
+      channels: ['website','telegram'],
+      greeting: "Welcome to Mama's Kitchen! 🍽️ How can I help you today?",
+      tone: 'friendly',
+      msgCount: 0,
+      systemPrompt: `You are a friendly customer service assistant for Mama's Kitchen, a popular Nigerian restaurant in Port Harcourt.\n\nMenu:\n- Jollof Rice + Chicken — ₦2,500\n- Fried Rice + Fish — ₦2,800\n- Egusi Soup + Eba — ₦2,000\n- Peppered Snail — ₦1,500\n- Chapman drink — ₦800\n\nLocation: D-Line, Port Harcourt\nHours: 8am – 10pm daily\n\nWhen a customer wants a reservation, collect their name, phone number, date and time. Always be warm and helpful. Keep replies short and clear.`,
+      createdAt: new Date().toISOString()
+    }];
+    saveAgents(agents);
+  }
+}
+
+function renderAgents() {
+  const agents = getAgents();
+  const grid = document.getElementById('agentsGrid');
+  const typeIcons = {restaurant:'🍽️',salon:'💇',shop:'🛍️',hotel:'🏨',clinic:'🏥',logistics:'🚚',custom:'🤖'};
+  const typeLabels = {restaurant:'Restaurant',salon:'Salon / Beauty',shop:'Retail Shop',hotel:'Hotel',clinic:'Clinic',logistics:'Logistics',custom:'Custom'};
+
+  const chLabels = {website:'🌐 Website',telegram:'✈️ Telegram',whatsapp:'📱 WhatsApp',instagram:'📸 Instagram',facebook:'👥 Facebook'};
+  const chClass = {website:'ch-website',telegram:'ch-telegram',whatsapp:'ch-whatsapp',instagram:'ch-instagram',facebook:'ch-facebook'};
+
+  grid.innerHTML = agents.map(a => `
+    <div class="agent-card" style="--card-color:${a.color}" onclick="openAgent('${a.id}')">
+      <div class="agent-card-top">
+        <div class="agent-icon" style="background:${a.color}22">${a.icon || typeIcons[a.type] || '🤖'}</div>
+        <div>
+          <div class="agent-card-name">${a.name}</div>
+          <div class="agent-card-type">${typeLabels[a.type] || 'Custom'}</div>
+        </div>
+      </div>
+      <div class="agent-channels">
+        ${(a.channels||[]).map(ch => `<span class="channel-tag ${chClass[ch]}">${chLabels[ch]}</span>`).join('')}
+      </div>
+      <div class="agent-card-footer">
+        <span class="status-badge ${a.status==='live'?'status-live':'status-draft'}">${a.status==='live'?'● Live':'○ Draft'}</span>
+        <span class="agent-msgs">${a.msgCount||0} messages</span>
+      </div>
+    </div>
+  `).join('') + `
+    <div class="new-agent-card" onclick="openNewAgent()">
+      <div class="plus">+</div>
+      <div class="label">New Agent</div>
+    </div>`;
+
+  // Update stats
+  const live = agents.filter(a => a.status === 'live').length;
+  const chSet = new Set(agents.flatMap(a => a.channels||[]));
+  const msgs = agents.reduce((s,a) => s + (a.msgCount||0), 0);
+  document.getElementById('statAgents').textContent = agents.length;
+  document.getElementById('statLive').textContent = live;
+  document.getElementById('statChannels').textContent = chSet.size;
+  document.getElementById('statMsgs').textContent = msgs;
+}
+
+function openAgent(id) {
+  window.location.href = `builder.html?id=${id}`;
+}
+
+// NEW AGENT MODAL
+let newColor = '#00e5ff';
+
+function openNewAgent() {
+  document.getElementById('newAgentModal').classList.add('open');
+}
+function closeNewAgent() {
+  document.getElementById('newAgentModal').classList.remove('open');
+}
+
+function toggleChannel(el) {
+  el.classList.toggle('selected');
+}
+
+function pickColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  newColor = el.dataset.c;
+}
+
+const typeIcons = {restaurant:'🍽️',salon:'💇',shop:'🛍️',hotel:'🏨',clinic:'🏥',logistics:'🚚',custom:'🤖'};
+const typePrompts = {
+  restaurant: `You are a friendly customer service assistant for [Business Name], a restaurant in Port Harcourt.\n\nHelp customers with menu, prices, hours, location, and reservations (collect name + phone + date + time).\n\nAlways be warm and keep replies concise.`,
+  salon: `You are a helpful assistant for [Business Name], a beauty salon in Port Harcourt.\n\nHelp clients with services, prices, and booking appointments (collect name + phone + preferred time).\n\nBe warm and professional.`,
+  shop: `You are a sales assistant for [Business Name], a retail shop in Port Harcourt.\n\nHelp customers with products, prices, availability, and orders (collect name + phone + item).\n\nBe helpful and enthusiastic.`,
+  hotel: `You are a front desk assistant for [Business Name], a hotel in Port Harcourt.\n\nHelp guests with room types, rates, availability, and booking (collect name + phone + check-in/out dates).\n\nBe professional and hospitable.`,
+  clinic: `You are a helpful assistant for [Business Name], a clinic in Port Harcourt.\n\nHelp patients with services, appointments (collect name + phone + reason), and location.\n\nBe calm and reassuring.`,
+  logistics: `You are a support assistant for [Business Name], a delivery company in Port Harcourt.\n\nHelp customers with rates, tracking, and pickups (collect name + phone + pickup + destination).\n\nBe efficient and clear.`,
+  custom: `You are a helpful AI assistant for [Business Name].\n\nHelp customers with questions about the business. Be friendly, clear, and professional.`
+};
+const typeGreetings = {
+  restaurant: "Welcome! 🍽️ Check our menu or make a reservation — how can I help?",
+  salon: "Hi gorgeous! 💇 Ready to book your next appointment?",
+  shop: "Welcome to the store! 🛍️ What are you looking for today?",
+  hotel: "Welcome! 🏨 Looking to book a room or need information?",
+  clinic: "Hello! 🏥 How can we assist you today?",
+  logistics: "Hi! 🚚 Need a delivery or want to track a package?",
+  custom: "Hi there! How can I help you today?"
+};
+
+function createAgent() {
+  const name = document.getElementById('newName').value.trim();
+  const type = document.getElementById('newType').value;
+  if (!name) { showToast('⚠️ Enter a business name'); return; }
+  if (!type) { showToast('⚠️ Select a business type'); return; }
+
+  const channels = [...document.querySelectorAll('.channel-option.selected')].map(el => el.dataset.ch);
+  if (channels.length === 0) { showToast('⚠️ Select at least one channel'); return; }
+
+  const id = 'agent-' + Date.now();
+  const agent = {
+    id, name, type,
+    icon: typeIcons[type] || '🤖',
+    color: newColor,
+    status: 'draft',
+    channels,
+    greeting: typeGreetings[type] || 'Hi! How can I help you today?',
+    tone: 'friendly',
+    msgCount: 0,
+    systemPrompt: typePrompts[type] || typePrompts.custom,
+    createdAt: new Date().toISOString()
+  };
+
+  const agents = getAgents();
+  agents.push(agent);
+  saveAgents(agents);
+  closeNewAgent();
+  window.location.href = `builder.html?id=${id}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+seedDefault();
+renderAgents();
+</script>
+</body>
+</html>
