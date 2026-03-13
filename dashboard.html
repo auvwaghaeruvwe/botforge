@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotForge — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --gold: #F5A623;
+    --gold-light: #FFD07A;
+    --dark: #0A0A0A;
+    --dark2: #111111;
+    --dark3: #1A1A1A;
+    --dark4: #222222;
+    --text: #E8E8E8;
+    --muted: #666;
+    --green: #00E676;
+    --red: #FF5252;
+    --blue: #448AFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 240px;
+    background: var(--dark2);
+    border-right: 1px solid #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    padding: 0 24px 24px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .sidebar-logo span { color: var(--gold); }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { background: var(--dark3); color: var(--text); }
+  .nav-item.active { background: rgba(245,166,35,0.1); color: var(--gold); }
+
+  .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+
+  .sidebar-bottom {
+    padding: 16px 12px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .biz-card {
+    background: var(--dark3);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+
+  .biz-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .biz-plan {
+    font-size: 11px;
+    color: var(--gold);
+    background: rgba(245,166,35,0.1);
+    padding: 2px 8px;
+    border-radius: 100px;
+    display: inline-block;
+  }
+
+  .logout-btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* MAIN */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    padding: 20px 32px;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--dark2);
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+  }
+
+  .trial-badge {
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 100px;
+  }
+
+  .content { padding: 32px; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    border-radius: 16px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: #2a2a2a; }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    color: var(--text);
+  }
+
+  .stat-change {
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 4px;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .btn-small {
+    background: var(--gold);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-small:hover { background: var(--gold-light); }
+
+  /* BOTS GRID */
+  .bots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .bot-card {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .bot-card:hover { border-color: rgba(245,166,35,0.3); transform: translateY(-2px); }
+
+  .bot-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .bot-icon {
+    width: 44px; height: 44px;
+    background: var(--dark3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .bot-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .bot-type {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .bot-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+
+  .bot-status::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+
+  .bot-channels {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .channel-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--dark3);
+    color: var(--muted);
+  }
+
+  .bot-stats {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #1a1a1a;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .bot-stat {
+    text-align: center;
+  }
+
+  .bot-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--gold);
+  }
+
+  .bot-stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ADD BOT CARD */
+  .add-bot-card {
+    background: var(--dark2);
+    border: 1px dashed #2a2a2a;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 180px;
+    text-decoration: none;
+  }
+
+  .add-bot-card:hover { border-color: var(--gold); background: rgba(245,166,35,0.02); }
+
+  .add-icon {
+    width: 44px; height: 44px;
+    background: rgba(245,166,35,0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: var(--gold);
+  }
+
+  .add-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .add-sub {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* LEADS TABLE */
+  .leads-table {
+    background: var(--dark2);
+    border: 1px solid #1a1a1a;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .table-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr;
+    padding: 14px 24px;
+    background: var(--dark3);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .table-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr;
+    padding: 16px 24px;
+    border-bottom: 1px solid #1a1a1a;
+    font-size: 14px;
+    align-items: center;
+    transition: background 0.2s;
+  }
+
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: var(--dark3); }
+
+  .lead-name { font-weight: 500; }
+
+  .lead-phone {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .lead-bot {
+    font-size: 12px;
+    color: var(--gold);
+  }
+
+  .lead-time {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .whatsapp-link {
+    color: #25D366;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .sidebar { width: 200px; }
+    .main { margin-left: 200px; }
+    .content { padding: 16px; }
+    .topbar { padding: 16px; }
+    .table-header, .table-row { grid-template-columns: 1fr 1fr; }
+    .table-header span:nth-child(n+3),
+    .table-row span:nth-child(n+3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">Bot<span>Forge</span></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item active">
+      <span class="icon">📊</span> Overview
+    </a>
+    <a href="builder.html" class="nav-item">
+      <span class="icon">🤖</span> My Chatbots
+    </a>
+    <a href="#leads" class="nav-item" onclick="showSection('leads')">
+      <span class="icon">👥</span> Leads
+    </a>
+    <a href="#website" class="nav-item" onclick="showSection('website')">
+      <span class="icon">🌐</span> My Website
+    </a>
+    <a href="#whatsapp" class="nav-item" onclick="showSection('whatsapp')">
+      <span class="icon">💬</span> WhatsApp
+    </a>
+    <a href="#settings" class="nav-item" onclick="showSection('settings')">
+      <span class="icon">⚙️</span> Settings
+    </a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="biz-card">
+      <div class="biz-name" id="bizNameDisplay">My Business</div>
+      <div class="biz-plan">🎯 Free Trial</div>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">Dashboard</div>
+    <div class="trial-badge">⏳ 14-day free trial</div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">🤖 Active Bots</div>
+        <div class="stat-value" id="totalBots">0</div>
+        <div class="stat-change">Chatbots running</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">👥 Total Leads</div>
+        <div class="stat-value" id="totalLeads">0</div>
+        <div class="stat-change">Customers collected</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">💬 Conversations</div>
+        <div class="stat-value" id="totalConvos">0</div>
+        <div class="stat-change">This month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">📡 Channels</div>
+        <div class="stat-value" id="totalChannels">0</div>
+        <div class="stat-change">Connected</div>
+      </div>
+    </div>
+
+    <!-- MY BOTS -->
+    <div class="section-header">
+      <div class="section-title">My Chatbots</div>
+      <a href="builder.html" class="btn-small">+ New Bot</a>
+    </div>
+
+    <div class="bots-grid" id="botsGrid">
+      <!-- Bots loaded here -->
+      <a href="builder.html" class="add-bot-card">
+        <div class="add-icon">+</div>
+        <div class="add-text">Create Your First Bot</div>
+        <div class="add-sub">Build an AI chatbot for your business in minutes</div>
+      </a>
+    </div>
+
+    <!-- RECENT LEADS -->
+    <div class="section-header">
+      <div class="section-title">Recent Leads</div>
+      <span style="font-size:12px;color:var(--muted)">Customers who chatted with your bot</span>
+    </div>
+
+    <div class="leads-table">
+      <div class="table-header">
+        <span>Customer Name</span>
+        <span>Phone Number</span>
+        <span>Bot</span>
+        <span>Time</span>
+        <span>Action</span>
+      </div>
+      <div id="leadsBody">
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <div class="empty-text">No leads yet. Once customers chat with your bot, they'll appear here.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-header">
+      <div class="section-title">Quick Actions</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:32px;">
+      <a href="builder.html" style="background:var(--dark2);border:1px solid #1a1a1a;border-radius:14px;padding:20px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:14px;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(245,166,35,0.3)'" onmouseout="this.style.borderColor='#1a1a1a'">
+        <span style="font-size:28px;">🤖</span>
+        <div>
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:14px;">Build a Bot</div>
+          <div style="font-size:12px;color:var(--muted);">Create new chatbot</div>
+        </div>
+      </a>
+      <div style="background:var(--dark2);border:1px solid #1a1a1a;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(245,166,35,0.3)'" onmouseout="this.style.borderColor='#1a1a1a'" onclick="alert('Website builder coming soon!')">
+        <span style="font-size:28px;">🌐</span>
+        <div>
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:14px;">Build Website</div>
+          <div style="font-size:12px;color:var(--muted);">Coming soon</div>
+        </div>
+      </div>
+      <div style="background:var(--dark2);border:1px solid #1a1a1a;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(245,166,35,0.3)'" onmouseout="this.style.borderColor='#1a1a1a'" onclick="window.open('https://wa.me/2349161036705?text=I need help with BotForge')">
+        <span style="font-size:28px;">💬</span>
+        <div>
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:14px;">Get Support</div>
+          <div style="font-size:12px;color:var(--muted);">WhatsApp us</div>
+        </div>
+      </div>
+      <div style="background:var(--dark2);border:1px solid #1a1a1a;border-radius:14px;padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(245,166,35,0.3)'" onmouseout="this.style.borderColor='#1a1a1a'" onclick="alert('Upgrade coming soon!')">
+        <span style="font-size:28px;">⭐</span>
+        <div>
+          <div style="font-family:Syne,sans-serif;font-weight:700;font-size:14px;">Upgrade Plan</div>
+          <div style="font-size:12px;color:var(--muted);">Get more features</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ============================================
+  // SUPABASE CONFIG — Replace with your values
+  // ============================================
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // ============================================
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentUser = null;
+
+  window.onload = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    currentUser = session.user;
+    const meta = currentUser.user_metadata;
+
+    // Show business name
+    if (meta?.business_name) {
+      document.getElementById('bizNameDisplay').textContent = meta.business_name;
+    }
+
+    // Load bots from localStorage (shared with builder)
+    loadBots();
+  };
+
+  function loadBots() {
+    const agents = JSON.parse(localStorage.getItem('bf_agents') || '[]');
+    const userAgents = agents; // In future filter by user ID
+
+    // Update stats
+    document.getElementById('totalBots').textContent = userAgents.length;
+    document.getElementById('totalChannels').textContent = userAgents.reduce((acc, a) => {
+      return acc + (a.channels?.filter(c => c.active)?.length || 0);
+    }, 0);
+
+    // Render bots
+    const grid = document.getElementById('botsGrid');
+    grid.innerHTML = '';
+
+    userAgents.forEach(agent => {
+      const card = document.createElement('div');
+      card.className = 'bot-card';
+      card.onclick = () => window.location.href = `builder.html`;
+      card.innerHTML = `
+        <div class="bot-header">
+          <div class="bot-icon">${agent.icon || '🤖'}</div>
+          <div>
+            <div class="bot-name">${agent.name || 'My Bot'}</div>
+            <div class="bot-type">${agent.type || 'Custom'}</div>
+          </div>
+        </div>
+        <div class="bot-status">Live</div>
+        <div class="bot-channels">
+          <span class="channel-tag">🌐 Website</span>
+          <span class="channel-tag">✈️ Telegram</span>
+        </div>
+        <div class="bot-stats">
+          <div class="bot-stat">
+            <div class="bot-stat-num">${agent.messageCount || 0}</div>
+            <div class="bot-stat-label">Messages</div>
+          </div>
+          <div class="bot-stat">
+            <div class="bot-stat-num">0</div>
+            <div class="bot-stat-label">Leads</div>
+          </div>
+          <div class="bot-stat">
+            <div class="bot-stat-num">2</div>
+            <div class="bot-stat-label">Channels</div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Add "create new" card
+    const addCard = document.createElement('a');
+    addCard.href = 'builder.html';
+    addCard.className = 'add-bot-card';
+    addCard.innerHTML = `
+      <div class="add-icon">+</div>
+      <div class="add-text">Create New Bot</div>
+      <div class="add-sub">Add another chatbot for your business</div>
+    `;
+    grid.appendChild(addCard);
+  }
+
+  async function handleLogout() {
+    await sb.auth.signOut();
+    window.location.href = 'auth.html';
+  }
+
+  function showSection(section) {
+    // Future: show different sections
+    console.log('Section:', section);
+  }
+</script>
+</body>
+</html>

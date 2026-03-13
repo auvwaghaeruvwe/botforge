@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotForge — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --gold: #F5A623;
+    --gold-light: #FFD07A;
+    --dark: #0A0A0A;
+    --dark2: #111111;
+    --dark3: #1A1A1A;
+    --text: #E8E8E8;
+    --muted: #888888;
+    --green: #00E676;
+    --red: #FF5252;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .logo span { color: var(--gold); }
+
+  .tagline {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+
+  .card {
+    background: var(--dark2);
+    border: 1px solid #1e1e1e;
+    border-radius: 20px;
+    padding: 32px;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--dark3);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+  }
+
+  .tab.active {
+    background: var(--dark2);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .form { display: flex; flex-direction: column; gap: 16px; }
+  .form.hidden { display: none; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  input {
+    background: var(--dark3);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus { border-color: var(--gold); }
+  input::placeholder { color: #444; }
+
+  .btn {
+    background: var(--gold);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+
+  .btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2a2a2a;
+  }
+
+  .message {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    display: none;
+  }
+
+  .message.error {
+    background: rgba(255,82,82,0.1);
+    border: 1px solid rgba(255,82,82,0.3);
+    color: var(--red);
+    display: block;
+  }
+
+  .message.success {
+    background: rgba(0,230,118,0.1);
+    border: 1px solid rgba(0,230,118,0.3);
+    color: var(--green);
+    display: block;
+  }
+
+  .terms {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .loading {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .back-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .back-link a {
+    color: var(--gold);
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo">Bot<span>Forge</span></div>
+  <p class="tagline">AI Chatbots & Websites for Nigerian Businesses</p>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- MESSAGE -->
+    <div class="message" id="message"></div>
+
+    <!-- LOGIN FORM -->
+    <div class="form" id="loginForm">
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Your password" />
+      </div>
+      <button class="btn" id="loginBtn" onclick="handleLogin()">Sign In to Dashboard</button>
+      <div class="divider">or</div>
+      <p class="terms">Don't have an account? <a href="#" onclick="switchTab('signup')" style="color:var(--gold);text-decoration:none;">Create one free</a></p>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div class="form hidden" id="signupForm">
+      <div class="field">
+        <label>Business Name</label>
+        <input type="text" id="bizName" placeholder="e.g. Mama's Kitchen" />
+      </div>
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="fullName" placeholder="e.g. Chioma Obi" />
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="signupEmail" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="phone" placeholder="e.g. 08012345678" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Minimum 6 characters" />
+      </div>
+      <button class="btn" id="signupBtn" onclick="handleSignup()">Create Free Account →</button>
+      <p class="terms">By signing up you agree to our terms. Your 14-day free trial starts immediately.</p>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← Back to BotForge</a>
+  </div>
+</div>
+
+<script>
+  // ============================================
+  // SUPABASE CONFIG — Replace with your values
+  // ============================================
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // ============================================
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Check if already logged in
+  window.onload = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      window.location.href = 'dashboard.html';
+    }
+  };
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('signupForm').classList.add('hidden');
+    clearMessage();
+
+    if (tab === 'login') {
+      document.querySelectorAll('.tab')[0].classList.add('active');
+      document.getElementById('loginForm').classList.remove('hidden');
+    } else {
+      document.querySelectorAll('.tab')[1].classList.add('active');
+      document.getElementById('signupForm').classList.remove('hidden');
+    }
+  }
+
+  function showMessage(text, type) {
+    const el = document.getElementById('message');
+    el.textContent = text;
+    el.className = `message ${type}`;
+  }
+
+  function clearMessage() {
+    const el = document.getElementById('message');
+    el.className = 'message';
+    el.textContent = '';
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<span class="loading"></span>Please wait...'
+      : (btnId === 'loginBtn' ? 'Sign In to Dashboard' : 'Create Free Account →');
+  }
+
+  async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) {
+      showMessage('Please fill in all fields.', 'error');
+      return;
+    }
+
+    setLoading('loginBtn', true);
+    clearMessage();
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+    setLoading('loginBtn', false);
+
+    if (error) {
+      showMessage(error.message || 'Login failed. Check your email and password.', 'error');
+    } else {
+      showMessage('Welcome back! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+    }
+  }
+
+  async function handleSignup() {
+    const bizName = document.getElementById('bizName').value.trim();
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('signupPassword').value;
+
+    if (!bizName || !fullName || !email || !phone || !password) {
+      showMessage('Please fill in all fields.', 'error');
+      return;
+    }
+
+    if (password.length < 6) {
+      showMessage('Password must be at least 6 characters.', 'error');
+      return;
+    }
+
+    setLoading('signupBtn', true);
+    clearMessage();
+
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          business_name: bizName,
+          full_name: fullName,
+          phone: phone,
+          plan: 'trial',
+          trial_ends: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      }
+    });
+
+    setLoading('signupBtn', false);
+
+    if (error) {
+      showMessage(error.message || 'Signup failed. Try again.', 'error');
+    } else {
+      showMessage('Account created! Check your email to confirm then sign in.', 'success');
+      setTimeout(() => switchTab('login'), 2000);
+    }
+  }
+
+  // Allow Enter key
+  document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const loginHidden = document.getElementById('loginForm').classList.contains('hidden');
+      if (loginHidden) handleSignup();
+      else handleLogin();
+    }
+  });
+</script>
+</body>
+</html>
