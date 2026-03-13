@@ -16,29 +16,36 @@ export default async function handler(req, res) {
 
     const cleanMessages = (messages || []).filter(m => m && m.content && String(m.content).trim() !== '');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const groqMessages = [
+      { role: 'system', content: system || 'You are a helpful assistant. Be friendly and concise.' },
+      ...cleanMessages
+    ];
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'llama-3.1-8b-instant',
         max_tokens: 500,
-        system: system || 'You are a helpful assistant. Be friendly and concise.',
-        messages: cleanMessages
+        messages: groqMessages
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Anthropic error:', JSON.stringify(data));
+      console.error('Groq error:', JSON.stringify(data));
       return res.status(response.status).json({ error: data });
     }
 
-    return res.status(200).json(data);
+    const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't respond right now.";
+    
+    return res.status(200).json({
+      content: [{ type: 'text', text: reply }]
+    });
 
   } catch (error) {
     console.error('Server error:', error.message);
